@@ -10,7 +10,7 @@ unset(compile_definitions)
 # on config values on the root Kconfig.
 
 if(CONFIG_COMPILER_OPTIMIZATION_LEVEL_RELEASE)
-    list(APPEND compile_options "-Os")
+    list(APPEND compile_options "-O2")
 else()
     list(APPEND compile_options "-Og")
 endif()
