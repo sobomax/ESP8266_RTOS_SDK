@@ -131,6 +131,7 @@
 //}}
 
 //Interrupt remap control registers define{{
+#define NMI_INT_ENABLE_REG          (PERIPHS_DPORT_BASEADDR)
 #define EDGE_INT_ENABLE_REG         (PERIPHS_DPORT_BASEADDR + 0x04)
 #define WDT_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT0)
 #define TM1_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
@@ -187,6 +188,8 @@
 #define RTC_GPIO_CONF                   (REG_RTC_BASE + 0x090)
 #define PAD_XPD_DCDC_CONF               (REG_RTC_BASE + 0x0A0)
 //}}
+
+#define WDEV_RAND                        (WDEV_COUNT_REG + 0x244)
 
 //CACHE{{
 #define CACHE_FLASH_CTRL_REG            (0x3ff00000 + 0x0c)

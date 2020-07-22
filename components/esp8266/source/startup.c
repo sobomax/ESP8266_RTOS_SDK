@@ -33,6 +33,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "esp_task.h"
 
 #ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
@@ -48,6 +49,8 @@ extern int wifi_nvs_init(void);
 extern esp_err_t esp_pthread_init(void);
 extern void phy_get_bb_evm(void);
 extern void uart_div_modify(uint8_t uart_no, uint16_t DivLatchValue);
+/*Only for calling esp_wifi_set_ps can compile successfully */
+uint32_t LwipTimOutLim = 0;
 
 static inline int should_load(uint32_t load_addr)
 {
@@ -71,6 +74,10 @@ static void user_init_entry(void *param)
 
     extern void app_main(void);
 
+    extern void phy_close_rf(void);
+
+    extern void esp_sleep_unlock();
+
     /* initialize C++ construture function */
     for (func = &__init_array_start; func < &__init_array_end; func++)
         func[0]();
@@ -86,6 +93,8 @@ static void user_init_entry(void *param)
     assert(mac_init() == 0);
     assert(base_gpio_init() == 0);
     esp_phy_load_cal_and_init(0);
+    phy_close_rf();
+    esp_sleep_unlock();
 
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
 
@@ -93,7 +102,7 @@ static void user_init_entry(void *param)
     esp_reset_reason_init();
 #endif
 
-#ifdef CONFIG_TASK_WDT
+#ifdef CONFIG_ESP_TASK_WDT
     esp_task_wdt_init();
 #endif
 
@@ -175,7 +184,7 @@ void call_start_cpu(size_t start_addr)
     esp_newlib_init();
 #endif
 
-    assert(xTaskCreate(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
+    assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
 
     vTaskStartScheduler();
 }

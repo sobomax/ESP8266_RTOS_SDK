@@ -35,8 +35,6 @@
 #include "driver/uart.h"
 #include "driver/uart_select.h"
 
-#define portYIELD_FROM_ISR() taskYIELD()
-
 #define UART_ENTER_CRITICAL()    portENTER_CRITICAL()
 #define UART_EXIT_CRITICAL()     portEXIT_CRITICAL()
 
@@ -419,6 +417,11 @@ esp_err_t uart_isr_register(uart_port_t uart_num, void (*fn)(void *), void *arg)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
 
+    for (int num = 0; num < UART_NUM_MAX; num++) {
+        if (p_uart_obj[num] == NULL) {
+            uart_disable_intr_mask(num, UART_INTR_MASK);
+        }
+    }
     UART_ENTER_CRITICAL();
     _xt_isr_mask(1 << ETS_UART_INUM);
     _xt_isr_attach(ETS_UART_INUM, uart_intr_service, NULL);
@@ -587,7 +590,11 @@ static void uart_rx_intr_handler_default(void *param)
                         }
 
                         if (p_uart->tx_len_tot == 0) {
-                            en_tx_flg = false;
+                            if (tx_fifo_rem == 0) {
+                                en_tx_flg = true;
+                            } else{
+                                en_tx_flg = false;
+                            }
                             xSemaphoreGiveFromISR(p_uart->tx_done_sem, &task_woken);
                             if (task_woken == pdTRUE) {
                                 portYIELD_FROM_ISR();
